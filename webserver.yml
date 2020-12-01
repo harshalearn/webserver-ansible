@@ -1,0 +1,53 @@
+- hosts: 192.168.0.164
+  vars_files:
+     - ws_vars.yml  
+  tasks:
+     - file:
+         state: directory
+         path: "{{ dvd_mount }}"
+
+     - mount:
+         src: "/dev/sr0"
+         path: "{{ dvd_mount }}"
+         state: mounted
+         fstype: "iso9660"
+
+     - yum_repository:
+         name: "mydvd1"
+         description: "Appstream DVD repo"
+         baseurl: "{{ dvd_mount }}/AppStream"
+         gpgcheck: no
+
+     - yum_repository:
+         name: "mydvd2"
+         description: "BaseOS DVD Repo"
+         baseurl: "{{ dvd_mount }}/BaseOS"
+         gpgcheck: no
+
+     - package:
+         name: "httpd"
+         state: present
+
+     - file:
+         state: directory
+         path: "{{ doc_root }}"
+
+     - template:
+         src: "ws.conf"
+         dest: "/etc/httpd/conf.d/ws.conf"
+       register: statconf
+
+     - copy:
+         dest: "{{ doc_root }}/index.html"
+         content: "This is template wwwwwww webpage!!!\n"
+
+     - service:
+         name: "httpd"
+         state: restarted
+       when: statconf.changed
+
+     - firewalld:
+         port: "{{ ws_port }}/tcp"
+         state: enabled
+         permanent: yes
+         immediate: yes   
