@@ -1,4 +1,4 @@
-- hosts: 192.168.0.164
+- hosts: webserverip
   vars_files:
      - ws_vars.yml  
   tasks:
